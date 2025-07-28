@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400&display=swap" rel="stylesheet">
+
+    <!-- Local static assets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth/fonts/icomoon/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth/css/owl.carousel.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth/css/style.css') }}">
+
+    <title>Sign Up</title>
+  </head>
+  <body>
+  
+  <div class="d-lg-flex half">
+    <div class="bg order-1 order-md-2" style="background-image: url('{{ url_for('static', filename='auth/images/ml.jpg') }}');"></div>
+    <div class="contents order-2 order-md-1">
+      <div class="container">
+        <div class="row align-items-center justify-content-center">
+          <div class="col-md-7">
+            <h3>Create an Account <strong>AI Teck</strong></h3>
+            <p class="mb-4">Please fill in the form to create an account.</p>
+
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <div class="alert alert-warning" role="alert">
+                  {{ messages[0] }}
+                </div>
+              {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('signup') }}" method="post">
+              <div class="form-group first">
+                <label for="username">Username</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="your-username" 
+                  id="username" 
+                  name="username" 
+                  required 
+                  value="{{ request.form.get('username', '') }}">
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  placeholder="your-email@gmail.com" 
+                  id="email" 
+                  name="email" 
+                  required 
+                  value="{{ request.form.get('email', '') }}">
+              </div>
+
+              <div class="form-group">
+                <label for="password">Password</label>
+                <input 
+                  type="password" 
+                  class="form-control" 
+                  placeholder="Your Password" 
+                  id="password" 
+                  name="password" 
+                  required>
+              </div>
+
+              <div class="form-group last mb-3">
+                <label for="confirm_password">Confirm Password</label>
+                <input 
+                  type="password" 
+                  class="form-control" 
+                  placeholder="Confirm Password" 
+                  id="confirm_password" 
+                  name="confirm_password" 
+                  required>
+              </div>
+
+              <input type="submit" value="Sign Up" class="btn btn-block btn-primary">
+            </form>
+
+            <p class="mt-3">Already have an account? <a href="{{ url_for('login') }}">Log In</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS Scripts -->
+  <script src="{{ url_for('static', filename='auth/js/jquery-3.3.1.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='auth/js/popper.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='auth/js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='auth/js/main.js') }}"></script>
+  </body>
+</html>

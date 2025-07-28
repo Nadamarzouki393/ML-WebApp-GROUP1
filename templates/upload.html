@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0"><i class="fas fa-upload me-2"></i>Analyse de Données</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data">
+                <!-- Section Fichier -->
+                <div class="mb-4">
+                    <h5 class="text-primary mb-3">1. Sélection du Fichier</h5>
+                    <div class="mb-3">
+                        <label for="dataset" class="form-label">Fichier Dataset (CSV/Excel)</label>
+                        <input class="form-control" type="file" name="dataset" id="dataset"
+                               accept=".csv,.xlsx"
+                               onchange="this.form.submit()"
+                               {% if filename %}disabled{% endif %}>
+                    </div>
+
+                    {% if filename %}
+                    <div class="alert alert-info d-flex justify-content-between align-items-center">
+                        <div><strong>Fichier sélectionné:</strong> {{ filename }}</div>
+                        <button type="submit" name="analyze" class="btn btn-sm btn-primary">
+                            <i class="fas fa-play me-1"></i> Lancer l'Analyse
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if preview %}
+                <!-- Aperçu des Données -->
+                <div class="mb-4">
+                    <h5 class="text-primary mb-3">2. Aperçu des Données</h5>
+                    <div class="table-responsive mb-3" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    {% for col in columns %}
+                                    <th>{{ col }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in preview %}
+                                <tr>
+                                    {% for col in columns %}
+                                    <td>{{ row[col] }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-secondary">
+                        <strong>Statistiques :</strong>
+                        <ul class="mb-0">
+                            <li>Lignes : {{ stats.rows }}</li>
+                            <li>Colonnes : {{ stats.columns | join(', ') }}</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Configuration -->
+                <div class="mb-4">
+                    <h5 class="text-primary mb-3">3. Configuration de l'Analyse</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="task" class="form-label">Type d'Analyse</label>
+                                <select class="form-select" name="task" id="taskSelect" required onchange="updateModelOptions()">
+                                    <option value="classification" {% if selected_task == 'classification' %}selected{% endif %}>Classification</option>
+                                    <option value="regression" {% if selected_task == 'regression' %}selected{% endif %}>Régression</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="model" class="form-label">Modèle</label>
+                                <select class="form-select" name="model" id="modelSelect" required>
+                                    {% for key, (name, _) in model_options.items() %}
+                                    <option value="{{ key }}" {% if request.form.get('model') == key %}selected{% endif %}>{{ name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                 <div class="col-12">
+    <div class="mb-3">
+        <label for="target" class="form-label d-flex justify-content-between align-items-center">
+            Colonne Cible
+            <button type="button" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-magic me-1"></i> Suggérer avec IA
+            </button>
+        </label>
+        <select class="form-select" name="target" id="targetSelect" required>
+            <option value="">Sélectionnez une colonne</option>
+            {% for col in columns %}
+            <option value="{{ col }}" {% if request.form.get('target') == col %}selected{% endif %}>{{ col }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+                    </div>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Script JS -->
+<script>
+const allModelOptions = {
+    classification: {
+        {% for key, (name, _) in all_model_options['classification'].items() %}
+        '{{ key }}': '{{ name }}',
+        {% endfor %}
+    },
+    regression: {
+        {% for key, (name, _) in all_model_options['regression'].items() %}
+        '{{ key }}': '{{ name }}',
+        {% endfor %}
+    }
+};
+
+function updateModelOptions() {
+    const task = document.getElementById('taskSelect').value;
+    const modelSelect = document.getElementById('modelSelect');
+    const currentModel = "{{ request.form.get('model', '') }}";
+
+    modelSelect.innerHTML = '';
+
+    for (const [value, label] of Object.entries(allModelOptions[task])) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        if (value === currentModel) {
+            option.selected = true;
+        }
+        modelSelect.appendChild(option);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    updateModelOptions();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        console.log("Form submitted with:", {
+            analyze: e.submitter?.name === 'analyze',
+            formData: Object.fromEntries(new FormData(form))
+        });
+    });
+});
+
+</script>
+
+<style>
+.card {
+    border-radius: 10px;
+}
+.table-responsive {
+    scrollbar-width: thin;
+}
+</style>
+{% endblock %}

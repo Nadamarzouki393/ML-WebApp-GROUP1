@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Historique des Analyses{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-dark"><i class="fas fa-history me-2 text-primary"></i>Historique des Analyses</h2>
+        <a href="{{ url_for('upload') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Nouvelle analyse
+        </a>
+    </div>
+
+    <div class="btn-group mb-4">
+        <a href="?filter=all" class="btn btn-outline-secondary">Tous</a>
+        <a href="?filter=classification" class="btn btn-outline-primary">Classification</a>
+        <a href="?filter=regression" class="btn btn-outline-info">Régression</a>
+    </div>
+
+    {% if analyses %}
+    <div class="row g-4">
+        {% for analysis in analyses %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 animate__animated animate__fadeInUp">
+                <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                    <div>
+                        <i class="fas fa-file-alt me-1 text-secondary"></i>
+                        <strong>{{ analysis.filename | truncate(20) }}</strong>
+                    </div>
+                    <span class="badge rounded-pill 
+                        {% if analysis.task_type == 'classification' %}
+                            bg-primary
+                        {% elif analysis.task_type == 'regression' %}
+                            bg-info
+                        {% endif %}">
+                        {{ analysis.task_type|upper }}
+                    </span>
+                </div>
+
+                <div class="card-body">
+                    <p class="mb-1"><i class="fas fa-cogs text-muted me-1"></i> <strong>{{ analysis.model_type }}</strong></p>
+                    <p class="mb-1"><i class="fas fa-bullseye text-muted me-1"></i> {{ analysis.target_column }}</p>
+                    <p class="mb-3"><i class="far fa-clock text-muted me-1"></i> {{ analysis.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+
+                    {% if analysis.task_type == 'classification' %}
+                        <div class="mb-2">
+                            <div class="small text-muted mb-1">Accuracy</div>
+                            <div class="progress">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ (analysis.accuracy * 100)|round(1) }}%;">
+                                    {{ (analysis.accuracy * 100)|round(1) }}%
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert 
+                            {% if analysis.r2 >= 0.7 %} alert-success
+                            {% elif analysis.r2 >= 0.4 %} alert-warning
+                            {% else %} alert-danger {% endif %} py-2 px-3">
+                            <strong>Score R²:</strong> {{ analysis.r2|round(3) }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-footer text-center bg-white">
+                    <a href="{{ url_for('view_analysis', analysis_id=analysis.id) }}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-chart-bar me-1"></i> Voir détails
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center mt-5 animate__animated animate__fadeIn">
+        <div class="display-4 text-muted mb-3">
+            <i class="fas fa-chart-pie"></i>
+        </div>
+        <h3 class="text-dark">Aucune analyse disponible</h3>
+        <p class="text-muted">Commencez par effectuer votre première analyse de données</p>
+        <a href="{{ url_for('upload') }}" class="btn btn-primary">
+            <i class="fas fa-upload me-1"></i> Démarrer une analyse
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

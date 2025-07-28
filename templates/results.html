@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Model Results - AI.Tech{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="container-fluid page-header py-5">
+    <div class="container text-center py-5">
+        <h1 class="display-2 text-white mb-4 animated slideInDown">Model Results</h1>
+        <nav aria-label="breadcrumb animated slideInDown">
+            <ol class="breadcrumb justify-content-center mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                <li class="breadcrumb-item text-primary" aria-current="page">Results</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- Results Section -->
+<div class="container-fluid py-5">
+    <div class="container py-5">
+        <div class="text-center mb-5 wow fadeInUp" data-wow-delay="0.1s">
+            <h5 class="text-primary">AI MODEL ANALYSIS</h5>
+            <h1 class="mb-0">Performance Results</h1>
+            <p class="mt-3">Model: <strong>{{ model_name }}</strong> | Task: <strong>{{ task }}</strong></p>
+        </div>
+
+        {% if not visualizations %}
+        <div class="alert alert-danger wow fadeInUp">
+            No visualization data available. Please check your model training.
+        </div>
+        {% else %}
+            <!-- Metrics -->
+            <div class="card mb-4 wow fadeInUp" data-wow-delay="0.3s">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Performance Metrics</h4>
+                </div>
+                <div class="card-body">
+                    {% if task == 'classification' %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="metric-card bg-light p-4 mb-3 rounded">
+                                    <h5 class="text-primary">Accuracy</h5>
+                                    <h2>{{ "%.2f"|format(results.accuracy * 100) }}%</h2>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="text-primary">Classification Report</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Class</th>
+                                                <th>Precision</th>
+                                                <th>Recall</th>
+                                                <th>F1-Score</th>
+                                                <th>Support</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for class_name, metrics in results.report.items() %}
+                                            {% if class_name not in ['accuracy', 'macro avg', 'weighted avg'] %}
+                                            <tr>
+                                                <td>{{ class_name }}</td>
+                                                <td>{{ "%.2f"|format(metrics.precision) }}</td>
+                                                <td>{{ "%.2f"|format(metrics.recall) }}</td>
+                                                <td>{{ "%.2f"|format(metrics['f1-score']) }}</td>
+                                                <td>{{ metrics.support }}</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    {% elif task == 'regression' %}
+                        <div class="row text-center">
+                            <div class="col-md-4 mb-3">
+                                <div class="metric-card bg-light p-3 rounded">
+                                    <h5 class="text-primary">Mean Squared Error</h5>
+                                    <h3>{{ "%.4f"|format(results.mse) }}</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="metric-card bg-light p-3 rounded">
+                                    <h5 class="text-primary">R² Score</h5>
+                                    <h3>{{ "%.4f"|format(results.r2) }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Visualizations -->
+            <div class="card mb-4 wow fadeInUp" data-wow-delay="0.4s">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Visualizations</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if task == 'classification' %}
+                            {% if 'confusion_matrix' in visualizations %}
+                            <div class="col-md-6 mb-4">
+                                <h4 class="text-primary mb-3">Confusion Matrix</h4>
+                                <img src="data:image/png;base64,{{ visualizations.confusion_matrix }}" 
+                                     class="img-fluid rounded shadow" 
+                                     alt="Confusion Matrix">
+                            </div>
+                            {% endif %}
+                            
+                            {% if 'roc_curve' in visualizations %}
+                            <div class="col-md-6 mb-4">
+                                <h4 class="text-primary mb-3">ROC Curve</h4>
+                                <img src="data:image/png;base64,{{ visualizations.roc_curve }}" 
+                                     class="img-fluid rounded shadow" 
+                                     alt="ROC Curve">
+                            </div>
+                            {% endif %}
+                        {% elif task == 'regression' %}
+                            {% if 'regression_plot' in visualizations %}
+                            <div class="col-md-6 mb-4">
+                                <h4 class="text-primary mb-3">Actual vs Predicted</h4>
+                                <img src="data:image/png;base64,{{ visualizations.regression_plot }}" 
+                                     class="img-fluid rounded shadow" 
+                                     alt="Actual vs Predicted">
+                            </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    
+                    {% if 'feature_importance' in visualizations %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h4 class="text-primary mb-3">Feature Importance</h4>
+                            <img src="data:image/png;base64,{{ visualizations.feature_importance }}" 
+                                 class="img-fluid rounded shadow" 
+                                 alt="Feature Importance">
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Data Preview -->
+            <div class="card wow fadeInUp" data-wow-delay="0.5s">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Data Preview (10 first rows)</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="bg-light">
+                                <tr>
+                                    {% for col in preview[0].keys() %}
+                                    <th>{{ col }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in preview %}
+                                <tr>
+                                    {% for value in row.values() %}
+                                    <td>{{ value }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

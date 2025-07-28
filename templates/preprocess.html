@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Prétraitement des Données</h2>
+    <p>Configurez les options de prétraitement pour votre dataset.</p>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <form method="POST" action="{{ url_for('preprocess') }}">
+                <h4>Gestion des Valeurs Manquantes</h4>
+                <div class="form-group">
+                    <select class="form-control" name="handle_missing">
+                        <option value="drop">Supprimer les lignes avec valeurs manquantes</option>
+                        <option value="mean">Remplacer par la moyenne (colonnes numériques)</option>
+                        <option value="median">Remplacer par la médiane (colonnes numériques)</option>
+                        <option value="mode">Remplacer par le mode (toutes colonnes)</option>
+                    </select>
+                </div>
+                
+                <h4>Options Avancées</h4>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="scale_features" id="scale_features">
+                    <label class="form-check-label" for="scale_features">Normaliser les caractéristiques numériques</label>
+                </div>
+                
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="encode_features" id="encode_features" checked>
+                    <label class="form-check-label" for="encode_features">Encoder les caractéristiques catégorielles</label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="feature_selection">Sélection de caractéristiques</label>
+                    <select class="form-control" name="feature_selection" id="feature_selection">
+                        <option value="none">Aucune</option>
+                        <option value="pca">PCA (pour régression seulement)</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary mt-3">Appliquer et Continuer</button>
+            </form>
+        </div>
+        
+        <div class="col-md-6">
+            <h4>Exploration des Données</h4>
+            {% if eda_plots %}
+                <div class="mb-4">
+                    <h5>Distribution de la Cible</h5>
+                    <img src="data:image/png;base64,{{ eda_plots.target_distribution }}" class="img-fluid">
+                </div>
+                
+                {% if eda_plots.correlation_matrix %}
+                <div class="mb-4">
+                    <h5>Matrice de Corrélation</h5>
+                    <img src="data:image/png;base64,{{ eda_plots.correlation_matrix }}" class="img-fluid">
+                </div>
+                {% endif %}
+            {% else %}
+                <p>Aucune visualisation EDA disponible.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

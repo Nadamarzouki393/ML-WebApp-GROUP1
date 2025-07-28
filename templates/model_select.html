@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Model Selection{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Select Model and Parameters</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('model_select') }}">
+                        <!-- Target Selection -->
+                        <div class="mb-4">
+                            <h5>1. Select Target Variable</h5>
+                            <select class="form-select" name="target" required>
+                                <option value="">-- Select Target --</option>
+                                {% for col in columns %}
+                                    <option value="{{ col.name }}">{{ col.name }} ({{ col.type }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Feature Selection -->
+                        <div class="mb-4">
+                            <h5>2. Select Features</h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAll">
+                                <label class="form-check-label" for="selectAll">Select All</label>
+                            </div>
+                            <div class="row mt-2">
+                                {% for col in columns %}
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input feature-check" type="checkbox" 
+                                               name="features" value="{{ col.name }}" id="feature{{ loop.index }}">
+                                        <label class="form-check-label" for="feature{{ loop.index }}">
+                                            {{ col.name }} ({{ col.type }})
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Model Selection -->
+                        <div class="mb-4">
+                            <h5>3. Select Model Type</h5>
+                            <div class="row">
+                                {% for model_key, model_info in model_utils.MODELS.items() %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input model-radio" type="radio" 
+                                                       name="model_type" value="{{ model_key }}" 
+                                                       id="model{{ loop.index }}" required
+                                                       data-params="{{ model_info.params|tojson|forceescape }}">
+                                                <label class="form-check-label" for="model{{ loop.index }}">
+                                                    <strong>{{ model_info.name }}</strong>
+                                                </label>
+                                            </div>
+                                            <small class="text-muted">
+                                                {{ model_info.class.__doc__.split('\n')[0] if model_info.class.__doc__ else '' }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Model Parameters (dynamic) -->
+                        <div class="mb-4" id="modelParameters">
+                            <h5>4. Adjust Model Parameters</h5>
+                            <p class="text-muted">Select a model to see available parameters</p>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-play"></i> Train Model
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Select all features checkbox
+    document.getElementById('selectAll').addEventListener('change', function(e) {
+        document.querySelectorAll('.feature-check').forEach(checkbox => {
+            checkbox.checked = e.target.checked;
+        });
+    });
+    
+    // Dynamic parameter controls
+    document.querySelectorAll('.model-radio').forEach(radio => {
+        radio.addEventListener('change', function(e) {
+            if (e.target.checked) {
+                const params = JSON.parse(e.target.dataset.params);
+                let html = '';
+                
+                for (const [param, config] of Object.entries(params)) {
+                    html += '<div class="mb-3">';
+                    html += `<label class="form-label">${param}</label>`;
+                    
+                    if (config.type === 'select') {
+                        html += `<select class="form-select" name="${param}">`;
+                        for (const option of config.options) {
+                            const selected = option === config.default ? ' selected' : '';
+                            html += `<option value="${option}"${selected}>${option}</option>`;
+                        }
+                        html += '</select>';
+                    } else {
+                        const step = config.type === 'int' ? '1' : '0.01';
+                        html += `<input type="number" class="form-control" name="${param}" 
+                                value="${config.default}" min="${config.min}" max="${config.max}" 
+                                step="${step}">`;
+                    }
+                    
+                    html += '</div>';
+                }
+                
+                document.getElementById('modelParameters').innerHTML = 
+                    '<h5>4. Adjust Model Parameters</h5>' + html;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

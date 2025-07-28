@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Détail de l'Analyse{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="mb-5">
+        <h2 class="text-primary fw-bold">
+            <i class="bi bi-bar-chart-line-fill me-2"></i>Analyse : {{ analysis.model_type }} ({{ analysis.task_type }})
+        </h2>
+        <p class="text-muted">Créée le : {{ analysis.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card border-primary shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="bi bi-file-earmark-text me-2"></i>Fichier</h5>
+                    <p class="card-text">{{ analysis.filename }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-success shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-success"><i class="bi bi-bullseye me-2"></i>Colonne cible</h5>
+                    <p class="card-text">{{ analysis.target_column }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if analysis.task_type == 'classification' %}
+    <div class="card mb-5 shadow-sm">
+        <div class="card-header bg-primary text-white fw-semibold">
+            <i class="bi bi-check2-square me-2"></i>Résultats Classification
+        </div>
+        <div class="card-body">
+            <p><strong>Accuracy :</strong> {{ analysis.accuracy | round(4) }}</p>
+
+            {% if analysis.confusion_matrix %}
+            <h6 class="mt-4">Matrice de Confusion</h6>
+            <img src="data:image/png;base64,{{ analysis.confusion_matrix }}" class="img-fluid rounded shadow-sm">
+            {% endif %}
+
+            {% if analysis.roc_curve %}
+            <h6 class="mt-4">Courbe ROC</h6>
+            <img src="data:image/png;base64,{{ analysis.roc_curve }}" class="img-fluid rounded shadow-sm">
+            {% endif %}
+        </div>
+    </div>
+    {% elif analysis.task_type == 'regression' %}
+    <div class="card mb-5 shadow-sm">
+        <div class="card-header bg-success text-white fw-semibold">
+            <i class="bi bi-graph-up-arrow me-2"></i>Résultats Régression
+        </div>
+        <div class="card-body">
+            <p><strong>MSE :</strong> {{ analysis.mse | round(4) }}</p>
+            <p><strong>R² :</strong> {{ analysis.r2 | round(4) }}</p>
+
+            {% if analysis.regression_plot %}
+            <h6 class="mt-4">Graphique Valeurs Prédites vs Réelles</h6>
+            <img src="data:image/png;base64,{{ analysis.regression_plot }}" class="img-fluid rounded shadow-sm">
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if analysis.feature_importance %}
+    <div class="card mb-5 shadow-sm">
+        <div class="card-header bg-warning text-dark fw-semibold">
+            <i class="bi bi-lightbulb-fill me-2"></i>Importance des Caractéristiques
+        </div>
+        <div class="card-body">
+            <img src="data:image/png;base64,{{ analysis.feature_importance }}" class="img-fluid rounded shadow-sm">
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card mb-5 shadow-sm">
+        <div class="card-header bg-info text-white fw-semibold">
+            <i class="bi bi-table me-2"></i>Aperçu du Dataset
+        </div>
+        <div class="card-body table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        {% for col in analysis.preview_data | from_json | first %}
+                        <th>{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in analysis.preview_data | from_json %}
+                    <tr>
+                        {% for value in row.values() %}
+                        <td>{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <a href="{{ url_for('history') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left-circle me-1"></i> Retour à l'historique
+    </a>
+</div>
+{% endblock %}
